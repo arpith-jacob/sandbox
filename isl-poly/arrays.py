@@ -49,13 +49,22 @@ def add_dimension(ctx, v, bound):
 
   # Handle output dimension
   v = increase_dimension(v, isl.dim_type.out)
+  return v
 
-  constraint = isl.Constraint.alloc_equality(v.get_space())
-  constraint = constraint.set_coefficient_val(isl.dim_type.in_, n_in_,
-                 isl.Val.int_from_si(ctx, -1))
-  constraint = constraint.set_coefficient_val(isl.dim_type.out, n_out,
-                 isl.Val.int_from_si(ctx, 1))
-  v = v.add_constraint(constraint)
+def poly_array(ctx, name, shape):
+  A = get_default_space(ctx, name)
+  for s in shape:
+    A = add_dimension(ctx, A, s)
+  return A
 
+def add_access(ctx, v, offsets):
+  for d, c in enumerate(offsets):
+    constraint = isl.Constraint.alloc_equality(v.get_space())
+    constraint = constraint.set_coefficient_val(isl.dim_type.in_, d,
+                   isl.Val.int_from_si(ctx, -1))
+    constraint = constraint.set_coefficient_val(isl.dim_type.out, d,
+                   isl.Val.int_from_si(ctx, 1))
+    constraint = constraint.set_constant_val(isl.Val.int_from_si(ctx, -c))
+    v = v.add_constraint(constraint)
   return v
 
