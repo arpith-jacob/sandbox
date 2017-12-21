@@ -2,14 +2,14 @@
 import islpy as isl
 
 def get_assign_map(ctx, statements):
-  maps = [s[0] for s in statements]
+  maps = [s[0] for s in statements.values()]
   union_map = isl.UnionMap("{}", ctx)
   for m in maps:
     union_map = union_map.union(isl.UnionMap.from_map(m))
   return union_map
 
 def get_use_map(ctx, statements):
-  maps = [[s[1][2][0][1], s[1][2][1][1]] for s in statements]
+  maps = [[s[1][2][0][1], s[1][2][1][1]] for s in statements.values()]
   maps = sum(maps, [])
   union_map = isl.UnionMap("{}", ctx)
   for m in maps:

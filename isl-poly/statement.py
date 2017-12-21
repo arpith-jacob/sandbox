@@ -40,3 +40,6 @@ def rename_statement(create_op):
         rename_expr(op[1], name))
   return wrapper
 
+def get_name(stmt):
+  return stmt[0].get_tuple_name(isl.dim_type.in_)
+

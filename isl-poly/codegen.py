@@ -34,6 +34,11 @@ def convert_expr(expr):
     else:
         raise NotImplementedError
 
+def to_list(l):
+    r = []
+    l.foreach(lambda e: r.append(e))
+    return r
+
 def build_ast(stmts, node):
     if node.get_type() == isl.ast_node_type.block:
         return [build_ast(stmts, c) for c in to_list(node.block_get_children())]
@@ -92,11 +97,12 @@ def transform_stmt(stmt, iterator_map, build, groups=None):
     return ("assign", transform_var(stmt[0], iterator_map, build, groups),
             transform_expr(stmt[1], iterator_map, build, groups))
 
-def codegen(ctx, schedule, statements):
-  stmts = {}
+def codegen(ctx, schedule, stmts):
+  codegen_stmts = {}
   def at_each_domain(node, build):
      if node.get_type() != isl.ast_node_type.user:
        return node
+
      schedule = build.get_schedule()
      iterator_map = schedule.reverse()
 
@@ -104,12 +110,9 @@ def codegen(ctx, schedule, statements):
      expr = expr.get_op_arg(0)
      name = expr.get_id().get_name()
 
-     var = statements[0][0]
-     pma = isl.PwMultiAff.from_map(isl.Map.from_union_map(iterator_map.apply_range(var)))
-     access = build.access_from_pw_multi_aff(pma)
-
-     stmt = transform_stmt(statements[0], iterator_map, build)
-     stmts[name] = stmt
+     stmt = stmts[name]
+     codegen_stmt = transform_stmt(stmt, iterator_map, build)
+     codegen_stmts[name] = codegen_stmt
 
      return isl.AstNode.alloc_user(isl.AstExpr.from_id(isl.Id.alloc(ctx, name, None)))
 
@@ -117,5 +120,5 @@ def codegen(ctx, schedule, statements):
   build, _ = build.set_at_each_domain(at_each_domain)
   node = build.node_from_schedule(schedule)
 
-  return build_ast(stmts, node)
+  return build_ast(codegen_stmts, node)
 
