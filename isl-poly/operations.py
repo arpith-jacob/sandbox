@@ -1,7 +1,9 @@
 
 import islpy as isl
 import arrays
+from statement import rename_statement
 
+@rename_statement
 def add(ctx, Z, A, B):
   Z_out = arrays.get_default_space(ctx, Z[0])
   A_in = arrays.get_default_space(ctx, A[0])
